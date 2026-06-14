@@ -1,6 +1,6 @@
 # Standoff History App
 
-Локальное Python-приложение для интерактивной зоны «История Standoff». Работает на Windows-ноутбуке или mini-PC без интернета, читает `YY\n` от Arduino Nano по Serial, собирает год как `20YY` и показывает нужный ролик или заглушку на основном экране.
+Локальное Python-приложение для интерактивной зоны «История Standoff». Работает на Windows-ноутбуке или mini-PC без интернета, читает цифры года от Arduino по Serial, собирает год как `20YY` и показывает нужный ролик или заглушку на основном экране.
 
 ## Установка
 
@@ -18,7 +18,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-По умолчанию приложение открывается fullscreen, показывает idle и пытается найти Arduino автоматически.
+По умолчанию приложение открывается fullscreen, показывает idle и пытается найти две Arduino автоматически.
 
 Для операторов стенда можно собрать Windows exe. Инструкция: [BUILD_WINDOWS.md](BUILD_WINDOWS.md).
 
@@ -56,34 +56,50 @@ standoff_after_2026.mp4
 python tools/content_check.py
 ```
 
-## Serial и COM-порт
+## Serial и COM-порты
 
-Arduino должна отправлять только строки формата:
+Актуальный режим стенда: две Arduino в двух USB-портах.
 
 ```text
-YY\n
+Arduino 1 -> десятки года -> D\n
+Arduino 2 -> единицы года -> D\n
 ```
 
-Примеры валидных значений: `00`, `05`, `16`, `17`, `26`, `42`, `99`.
+Каждая плата отправляет одну цифру `0-9` и перенос строки.
 
-В `config.json` можно указать конкретный порт:
+Пример:
+
+```text
+tens Arduino отправляет: 1
+ones Arduino отправляет: 7
+приложение собирает: 17 -> 2017 -> standoff_2017.mp4
+```
+
+В `config.json` можно указать конкретные порты:
 
 ```json
 "serial": {
   "enabled": true,
-  "port": "COM3",
-  "baudRate": 9600
+  "mode": "dual_digit",
+  "baudRate": 9600,
+  "dual": {
+    "tensPort": "COM3",
+    "onesPort": "COM4",
+    "ledTarget": "tens"
+  }
 }
 ```
 
-Если стоит `"port": "auto"`, приложение выбирает порт с приоритетом по описаниям `Arduino`, `CH340`, `USB Serial`, `Nano`. Если Arduino не найдена, приложение остаётся в idle и ручной режим продолжает работать.
+Если стоит `"auto"`, приложение выбирает два Arduino-подобных COM-порта с приоритетом по описаниям `Arduino`, `CH340`, `USB Serial`, `Nano`. У двух одинаковых плат порядок может поменяться, поэтому для площадки надёжнее один раз прописать `tensPort` и `onesPort` явно.
 
 Проверка Serial:
 
 ```bash
-python tools/serial_check.py --port auto --baud 9600
-python tools/serial_check.py --port COM3 --baud 9600
+python tools/serial_check.py --mode dual_digit --tens-port auto --ones-port auto --baud 9600
+python tools/serial_check.py --mode dual_digit --tens-port COM3 --ones-port COM4 --baud 9600
 ```
+
+Старый режим одной Arduino сохранён: поставь `"mode": "single_yy"`, тогда Arduino должна отправлять `YY\n`.
 
 ## Логика годов
 
@@ -95,7 +111,7 @@ python tools/serial_check.py --port COM3 --baud 9600
 
 Первое стабильное значение от Arduino при старте не запускает ролик, если `triggerOnStartup=false`. Это защищает от автозапуска, когда барабан уже стоит на каком-то значении.
 
-Вход стабилизируется через `stabilizationDelayMs`. Повтор того же `YY` не перезапускает ролик бесконечно.
+Вход стабилизируется через `stabilizationDelayMs`. Повтор того же собранного `YY` не перезапускает ролик бесконечно.
 
 ## Ручной режим
 
@@ -116,7 +132,7 @@ python tools/serial_check.py --port COM3 --baud 9600
 
 Показывает:
 
-- статус Arduino и COM-порт
+- статус Arduino и COM-порты
 - last raw input, candidate, stable, last triggered
 - mapped year, текущий сценарий и файл
 - LED status и последнюю LED-команду
@@ -137,7 +153,7 @@ LED-управление абстрактное и настраивается в
 }
 ```
 
-Если `led.enabled=false`, приложение не отправляет команды и работает без ленты. Если включить LED, команды отправляются в тот же Serial-канал.
+Если `led.enabled=false`, приложение не отправляет команды и работает без ленты. Если включить LED в режиме двух Arduino, команда отправляется в порт из `serial.dual.ledTarget`: `tens`, `ones` или `both`.
 
 ## Настройка экрана
 

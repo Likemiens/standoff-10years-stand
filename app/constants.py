@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 VALID_YY_PATTERN = r"^\d{2}$"
+VALID_DIGIT_PATTERN = r"^\d$"
 
 SCENARIO_IDLE = "idle"
 SCENARIO_VIDEO = "video"

@@ -18,10 +18,16 @@ ROOT_DIR = get_root_dir()
 DEFAULT_CONFIG: dict[str, Any] = {
     "serial": {
         "enabled": True,
+        "mode": "dual_digit",
         "port": "auto",
         "baudRate": 9600,
         "lineEnding": "\n",
         "reconnectIntervalMs": 2000,
+        "dual": {
+            "tensPort": "auto",
+            "onesPort": "auto",
+            "ledTarget": "tens",
+        },
     },
     "input": {
         "yearPrefix": "20",

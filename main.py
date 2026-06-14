@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication
 from app.config import load_config
 from app.constants import SCENARIO_AFTER, SCENARIO_BEFORE, SCENARIO_IDLE
 from app.content_resolver import ContentResolver
+from app.dual_serial_client import DualDigitSerialClient
 from app.led_controller import LedController
 from app.logger import setup_logger
 from app.manual_control import ManualControl
@@ -65,9 +66,13 @@ def main() -> int:
     resolver = ContentResolver(config)
     content_check = resolver.check_content()
 
-    serial_client: SerialClient | None = None
+    serial_client: SerialClient | DualDigitSerialClient | None = None
     if config["serial"].get("enabled", True) and not args.simulate:
-        serial_client = SerialClient(config["serial"], logger)
+        serial_mode = str(config["serial"].get("mode", "single_yy")).lower()
+        if serial_mode == "dual_digit":
+            serial_client = DualDigitSerialClient(config["serial"], logger)
+        else:
+            serial_client = SerialClient(config["serial"], logger, name="arduino_single")
     elif args.simulate:
         logger.info("simulate_mode_enabled")
 

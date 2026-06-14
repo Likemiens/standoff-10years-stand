@@ -1,10 +1,16 @@
 {
   "serial": {
     "enabled": true,
+    "mode": "dual_digit",
     "port": "auto",
     "baudRate": 9600,
     "lineEnding": "\n",
-    "reconnectIntervalMs": 2000
+    "reconnectIntervalMs": 2000,
+    "dual": {
+      "tensPort": "auto",
+      "onesPort": "auto",
+      "ledTarget": "tens"
+    }
   },
   "input": {
     "yearPrefix": "20",
