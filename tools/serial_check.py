@@ -10,7 +10,8 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
-from app.constants import SERIAL_PORT_KEYWORDS, VALID_DIGIT_PATTERN, VALID_YY_PATTERN
+from app.constants import SERIAL_PORT_KEYWORDS, VALID_YY_PATTERN
+from app.dual_digit_parser import parse_dual_digit_value
 
 
 def parse_args() -> argparse.Namespace:
@@ -106,11 +107,14 @@ def read_dual(serial_module: object, tens_port: str, ones_port: str, baud: int, 
                     if not raw:
                         continue
                     text = raw.decode("utf-8", errors="replace").strip()
-                    valid = re.fullmatch(VALID_DIGIT_PATTERN, text) is not None
+                    parsed = parse_dual_digit_value(text, fallback_role=role)
                     with lock:
-                        print(f"{role} {'valid' if valid else 'invalid'}: {text!r}")
-                        if valid:
-                            digits[role] = text
+                        print(f"{role} {'valid' if parsed else 'invalid'}: {text!r}")
+                        if parsed:
+                            effective_role, digit = parsed
+                            if effective_role != role or text != digit:
+                                print(f"  parsed as {effective_role}={digit}")
+                            digits[effective_role] = digit
                             if digits["tens"] and digits["ones"]:
                                 print(f"combined YY: {digits['tens']}{digits['ones']}")
         except Exception as exc:

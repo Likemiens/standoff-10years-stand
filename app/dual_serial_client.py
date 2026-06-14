@@ -6,7 +6,8 @@ from typing import Any
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
-from app.constants import VALID_DIGIT_PATTERN
+from app.constants import VALID_DUAL_DIGIT_PATTERN
+from app.dual_digit_parser import parse_dual_digit_value
 from app.serial_client import SerialClient, find_serial_ports
 
 
@@ -124,7 +125,7 @@ class DualDigitSerialClient(QObject):
             client_config,
             self.logger,
             port=port,
-            value_pattern=VALID_DIGIT_PATTERN,
+            value_pattern=VALID_DUAL_DIGIT_PATTERN,
             name=f"arduino_{role}",
         )
         client.rawLineReceived.connect(lambda raw, selected=role: self.rawLineReceived.emit(f"{selected}:{raw}"))
@@ -134,8 +135,17 @@ class DualDigitSerialClient(QObject):
         client.statusChanged.connect(lambda connected, port_name, selected=role: self._handle_status(selected, connected, port_name))
         return client
 
-    def _handle_digit(self, role: str, digit: str) -> None:
-        if role == "tens":
+    def _handle_digit(self, role: str, raw_value: str) -> None:
+        parsed = parse_dual_digit_value(raw_value, fallback_role=role)
+        if parsed is None:
+            self._handle_invalid_digit(role, raw_value)
+            return
+
+        effective_role, digit = parsed
+        if effective_role != role:
+            self.logger.info("dual_digit_role_override | port_role=%s | payload_role=%s | raw=%s", role, effective_role, raw_value)
+
+        if effective_role == "tens":
             if self.tens_digit == digit:
                 return
             self.tens_digit = digit
@@ -146,7 +156,7 @@ class DualDigitSerialClient(QObject):
 
         self.logger.info(
             "dual_digit | role=%s | digit=%s | tens=%s | ones=%s",
-            role,
+            effective_role,
             digit,
             self.tens_digit or "-",
             self.ones_digit or "-",

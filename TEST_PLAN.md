@@ -175,7 +175,16 @@ F1
 
 ## 6. Проверка Arduino / Serial
 
-Цель: убедиться, что две Arduino отправляют корректный формат `D\n`, где `D` — одна цифра `0-9`.
+Цель: убедиться, что две Arduino отправляют корректный формат.
+
+Поддерживаются:
+
+```text
+D   -> одна цифра 0-9, роль берётся из COM-порта
+TD  -> десятки
+UD  -> единицы
+OD  -> единицы
+```
 
 Подключить обе Arduino по USB:
 
@@ -199,8 +208,8 @@ python tools/serial_check.py --mode dual_digit --tens-port COM3 --ones-port COM4
 Ожидаемо:
 
 ```text
-tens valid: '1'
-ones valid: '7'
+tens valid: 'T1'
+ones valid: 'U7'
 combined YY: 17
 ```
 
