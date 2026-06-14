@@ -1,0 +1,62 @@
+{
+  "serial": {
+    "enabled": true,
+    "port": "auto",
+    "baudRate": 9600,
+    "lineEnding": "\n",
+    "reconnectIntervalMs": 2000
+  },
+  "input": {
+    "yearPrefix": "20",
+    "expectedFormat": "YY",
+    "stabilizationDelayMs": 700,
+    "duplicateBlockMs": 1000,
+    "triggerOnStartup": false
+  },
+  "content": {
+    "path": "./content",
+    "validYearsFrom": 2016,
+    "validYearsTo": 2026,
+    "yearFilePattern": "standoff_{year}.mp4",
+    "idle": "standoff_idle.mp4",
+    "beforeRange": "standoff_before_2016.mp4",
+    "afterRange": "standoff_after_2026.mp4",
+    "returnToIdleAfterVideo": true,
+    "returnToIdleDelayMs": 1500,
+    "staticDisplayMs": 8000
+  },
+  "display": {
+    "fullscreen": true,
+    "screenIndex": 0,
+    "backgroundColor": "#000000",
+    "hideCursor": true,
+    "keepAspectRatio": true
+  },
+  "led": {
+    "enabled": false,
+    "mode": "serial",
+    "chip": "unknown",
+    "voltage": 12,
+    "powerPerMeterW": 18,
+    "runCommand": "LED_RUN",
+    "offCommand": "LED_OFF",
+    "idleCommand": "LED_IDLE",
+    "errorCommand": "LED_ERROR",
+    "runDelayMs": 1200,
+    "sendOffOnVideoStart": true,
+    "runOnlyForValidYears": true
+  },
+  "debug": {
+    "enabled": true,
+    "showOnStart": false,
+    "hotkey": "F1"
+  },
+  "manual": {
+    "enabled": true,
+    "hotkey": "F2"
+  },
+  "logging": {
+    "enabled": true,
+    "path": "./logs/events.log"
+  }
+}

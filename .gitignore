@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Local runtime logs
+logs/*.log
+!logs/.gitkeep
+
+# Local media content. Keep real event videos outside Git.
+content/*.mp4
+content/*.mov
+content/*.avi
+content/*.mkv
+content/*.png
+content/*.jpg
+content/*.jpeg
+!content/.gitkeep
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
