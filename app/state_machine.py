@@ -46,7 +46,6 @@ class StandoffStateMachine(QObject):
         self.current_file = ""
         self.last_error = ""
         self._pending_content: ResolvedContent | None = None
-        self._pending_led_run_sent = False
 
         self._stabilization_timer = QTimer(self)
         self._stabilization_timer.setSingleShot(True)
@@ -132,7 +131,12 @@ class StandoffStateMachine(QObject):
 
         resolved = self.resolver.resolve_named(scenario)
         self.logger.info("manual_launch | scenario=%s | file=%s", scenario, resolved.file_name)
-        self._play_content(resolved, led_run_sent=False)
+        self._return_idle_timer.stop()
+        self._led_delay_timer.stop()
+        self._led_off_timer.stop()
+        self._pending_content = None
+        self._send_pre_content_led(resolved)
+        self._play_content(resolved)
 
     def send_led_command(self, command_name: str) -> None:
         command_map = {
@@ -154,6 +158,8 @@ class StandoffStateMachine(QObject):
     def handle_content_finished(self) -> None:
         if self.current_scenario == SCENARIO_IDLE:
             return
+        if self.current_scenario == SCENARIO_VIDEO:
+            self._turn_led_off()
         if not bool(self.config["content"].get("returnToIdleAfterVideo", True)):
             return
         delay_ms = int(self.config["content"].get("returnToIdleDelayMs", 1500))
@@ -171,7 +177,6 @@ class StandoffStateMachine(QObject):
         self._led_off_timer.stop()
         self._return_idle_timer.stop()
         self._pending_content = None
-        self._pending_led_run_sent = False
         resolved = self.resolver.resolve_named(SCENARIO_IDLE)
         self.current_scenario = SCENARIO_IDLE
         self.current_file = resolved.file_name
@@ -233,7 +238,6 @@ class StandoffStateMachine(QObject):
         self._led_delay_timer.stop()
         self._led_off_timer.stop()
         self._pending_content = None
-        self._pending_led_run_sent = False
         self.last_triggered_value = value
         self.last_triggered_at_ms = now_ms
 
@@ -269,10 +273,9 @@ class StandoffStateMachine(QObject):
 
         if led_run_sent:
             self._pending_content = resolved
-            self._pending_led_run_sent = True
             self._led_delay_timer.start(int(self.config["led"].get("runDelayMs", 1200)))
         else:
-            self._play_content(resolved, led_run_sent=False)
+            self._play_content(resolved)
 
         self._emit_debug()
 
@@ -280,10 +283,8 @@ class StandoffStateMachine(QObject):
         if self._pending_content is None:
             return
         content = self._pending_content
-        led_run_sent = self._pending_led_run_sent
         self._pending_content = None
-        self._pending_led_run_sent = False
-        self._play_content(content, led_run_sent)
+        self._play_content(content)
 
     def _turn_led_off(self) -> None:
         self.led.send_off()
@@ -291,7 +292,7 @@ class StandoffStateMachine(QObject):
             self.last_error = self.led.last_error
         self._emit_debug()
 
-    def _play_content(self, resolved: ResolvedContent, led_run_sent: bool) -> None:
+    def _play_content(self, resolved: ResolvedContent) -> None:
         self.current_scenario = resolved.scenario
         self.current_file = resolved.file_name
         if resolved.year is not None:
@@ -303,9 +304,6 @@ class StandoffStateMachine(QObject):
 
         self.contentRequested.emit(resolved, resolved.scenario == SCENARIO_IDLE)
         self.logger.info("play_content | scenario=%s | file=%s | exists=%s", resolved.scenario, resolved.file_name, resolved.exists)
-
-        if led_run_sent and bool(self.config["led"].get("sendOffOnVideoStart", True)):
-            self.led.send_off()
 
         if self.led.last_error:
             self.last_error = self.led.last_error

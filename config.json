@@ -33,7 +33,7 @@
   },
   "display": {
     "fullscreen": true,
-    "screenIndex": 0,
+    "screenIndex": 1,
     "backgroundColor": "#000000",
     "hideCursor": true,
     "keepAspectRatio": true
@@ -54,8 +54,7 @@
     "idleCommand": "0",
     "errorCommand": "0",
     "runDelayMs": 1200,
-    "outOfRangeDurationMs": 1200,
-    "sendOffOnVideoStart": true
+    "outOfRangeDurationMs": 7000
   },
   "debug": {
     "enabled": true,

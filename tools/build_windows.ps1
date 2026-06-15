@@ -8,6 +8,18 @@ if (-not (Test-Path $Python)) {
   $Python = "python"
 }
 
+foreach ($ConfigFile in @("config.json", "config.example.json")) {
+  $ConfigPath = Join-Path $Root $ConfigFile
+  if (-not (Test-Path $ConfigPath)) {
+    throw "Build failed: $ConfigFile was not found in $Root"
+  }
+
+  & $Python -m json.tool $ConfigPath > $null
+  if ($LASTEXITCODE -ne 0) {
+    throw "Build failed: $ConfigFile is not valid JSON. Fix it before building."
+  }
+}
+
 & $Python -m PyInstaller `
   --noconfirm `
   --clean `

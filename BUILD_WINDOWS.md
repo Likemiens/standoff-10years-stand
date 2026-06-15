@@ -82,10 +82,12 @@ dist\StandoffHistory\
 
 ## Настройка после сборки
 
+Сборка копирует корневой `config.json` в `dist\StandoffHistory\config.json` и проверяет, что JSON валиден. Если боевой конфиг в корне проекта актуален, после сборки его не нужно править вручную.
+
 Перед запуском на стенде:
 
 1. Проверить, что видео лежат в `dist\StandoffHistory\content\`.
-2. Проверить `dist\StandoffHistory\config.json`.
+2. Проверить `dist\StandoffHistory\config.json`, только если на этом компьютере отличаются COM-порты или номер экрана.
 3. Если COM-порт известен, указать его явно:
 
 ```json
