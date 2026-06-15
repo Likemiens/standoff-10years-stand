@@ -15,6 +15,10 @@ build/
 dist/
 *.spec
 
+# Local media content
+content/*
+!content/.gitkeep
+
 # Local runtime logs
 logs/*.log
 !logs/.gitkeep

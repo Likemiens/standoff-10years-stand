@@ -3,7 +3,12 @@ $ErrorActionPreference = "Stop"
 $Root = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $Root
 
-python -m PyInstaller `
+$Python = Join-Path $Root ".venv\Scripts\python.exe"
+if (-not (Test-Path $Python)) {
+  $Python = "python"
+}
+
+& $Python -m PyInstaller `
   --noconfirm `
   --clean `
   --name StandoffHistory `
@@ -34,6 +39,10 @@ if (Test-Path (Join-Path $Root "TEST_PLAN.md")) {
   Copy-Item -Force (Join-Path $Root "TEST_PLAN.md") (Join-Path $Dist "TEST_PLAN.md")
 }
 
+if (Test-Path (Join-Path $Root "OPERATOR_GUIDE.md")) {
+  Copy-Item -Force (Join-Path $Root "OPERATOR_GUIDE.md") (Join-Path $Dist "OPERATOR_GUIDE.md")
+}
+
 if (Test-Path (Join-Path $Root "content")) {
   $ContentItems = Get-ChildItem -Force (Join-Path $Root "content")
   foreach ($Item in $ContentItems) {
@@ -41,11 +50,48 @@ if (Test-Path (Join-Path $Root "content")) {
   }
 }
 
+$Exe = Join-Path $Dist "StandoffHistory.exe"
+if (-not (Test-Path $Exe)) {
+  throw "Build failed: StandoffHistory.exe was not created in $Dist"
+}
+
 $StartBat = Join-Path $Dist "START_STANDOFF.bat"
 Set-Content -Encoding ASCII -Path $StartBat -Value @"
 @echo off
-cd /d "%~dp0"
-start "" "StandoffHistory.exe"
+setlocal
+set "APP_DIR=%~dp0"
+set "APP_EXE=%APP_DIR%StandoffHistory.exe"
+
+if not exist "%APP_EXE%" (
+  echo ERROR: StandoffHistory.exe was not found.
+  echo.
+  echo Start this file from the StandoffHistory folder:
+  echo %APP_DIR%
+  echo.
+  echo Do not copy START_STANDOFF.bat to Desktop.
+  echo Create a shortcut to START_STANDOFF.bat instead.
+  echo.
+  pause
+  exit /b 1
+)
+
+cd /d "%APP_DIR%"
+start "" "%APP_EXE%"
+"@
+
+$ShortcutBat = Join-Path $Dist "CREATE_DESKTOP_SHORTCUT.bat"
+Set-Content -Encoding ASCII -Path $ShortcutBat -Value @"
+@echo off
+setlocal
+set "APP_DIR=%~dp0"
+set "TARGET=%APP_DIR%START_STANDOFF.bat"
+set "SHORTCUT=%USERPROFILE%\Desktop\Standoff.lnk"
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "`$s=(New-Object -COM WScript.Shell).CreateShortcut('%SHORTCUT%'); `$s.TargetPath='%TARGET%'; `$s.WorkingDirectory='%APP_DIR%'; `$s.Save()"
+
+echo Desktop shortcut created:
+echo %SHORTCUT%
+pause
 "@
 
 Write-Host ""
