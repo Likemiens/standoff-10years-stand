@@ -54,6 +54,7 @@
     "idleCommand": "0",
     "errorCommand": "0",
     "runDelayMs": 1200,
+    "outOfRangeDurationMs": 1200,
     "sendOffOnVideoStart": true
   },
   "debug": {

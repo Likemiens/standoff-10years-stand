@@ -56,6 +56,10 @@ class StandoffStateMachine(QObject):
         self._led_delay_timer.setSingleShot(True)
         self._led_delay_timer.timeout.connect(self._start_pending_content)
 
+        self._led_off_timer = QTimer(self)
+        self._led_off_timer.setSingleShot(True)
+        self._led_off_timer.timeout.connect(self._turn_led_off)
+
         self._return_idle_timer = QTimer(self)
         self._return_idle_timer.setSingleShot(True)
         self._return_idle_timer.timeout.connect(lambda: self.show_idle("return_to_idle"))
@@ -164,12 +168,15 @@ class StandoffStateMachine(QObject):
 
     def show_idle(self, source: str = "system") -> None:
         self._led_delay_timer.stop()
+        self._led_off_timer.stop()
         self._return_idle_timer.stop()
+        self._pending_content = None
+        self._pending_led_run_sent = False
         resolved = self.resolver.resolve_named(SCENARIO_IDLE)
         self.current_scenario = SCENARIO_IDLE
         self.current_file = resolved.file_name
         self.mapped_year = ""
-        self.led.send_idle()
+        self.led.send_off()
         if resolved.error:
             self.last_error = resolved.error
             self.logger.error("content_error | scenario=idle | error=%s", resolved.error)
@@ -224,6 +231,9 @@ class StandoffStateMachine(QObject):
 
         self._return_idle_timer.stop()
         self._led_delay_timer.stop()
+        self._led_off_timer.stop()
+        self._pending_content = None
+        self._pending_led_run_sent = False
         self.last_triggered_value = value
         self.last_triggered_at_ms = now_ms
 
@@ -275,6 +285,12 @@ class StandoffStateMachine(QObject):
         self._pending_led_run_sent = False
         self._play_content(content, led_run_sent)
 
+    def _turn_led_off(self) -> None:
+        self.led.send_off()
+        if self.led.last_error:
+            self.last_error = self.led.last_error
+        self._emit_debug()
+
     def _play_content(self, resolved: ResolvedContent, led_run_sent: bool) -> None:
         self.current_scenario = resolved.scenario
         self.current_file = resolved.file_name
@@ -301,7 +317,16 @@ class StandoffStateMachine(QObject):
         if resolved.scenario == SCENARIO_VIDEO:
             return self.led.send_run()
         if resolved.scenario in {SCENARIO_BEFORE, SCENARIO_AFTER}:
-            return self.led.send_out_of_range()
+            sent = self.led.send_out_of_range()
+            if sent:
+                delay_ms = int(
+                    self.config["led"].get(
+                        "outOfRangeDurationMs",
+                        self.config["led"].get("runDelayMs", 1200),
+                    )
+                )
+                self._led_off_timer.start(delay_ms)
+            return False
         return False
 
     def _emit_debug(self) -> None:

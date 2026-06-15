@@ -54,6 +54,7 @@
     "idleCommand": "LED_IDLE",
     "errorCommand": "LED_ERROR",
     "runDelayMs": 1200,
+    "outOfRangeDurationMs": 1200,
     "sendOffOnVideoStart": true
   },
   "debug": {

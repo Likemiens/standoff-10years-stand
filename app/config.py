@@ -71,6 +71,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "idleCommand": "LED_IDLE",
         "errorCommand": "LED_ERROR",
         "runDelayMs": 1200,
+        "outOfRangeDurationMs": 1200,
         "sendOffOnVideoStart": True,
     },
     "debug": {"enabled": True, "showOnStart": False, "hotkey": "F1"},
