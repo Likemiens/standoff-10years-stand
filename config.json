@@ -7,8 +7,8 @@
     "lineEnding": "\n",
     "reconnectIntervalMs": 2000,
     "dual": {
-      "tensPort": "auto",
-      "onesPort": "auto",
+      "tensPort": "COM3",
+      "onesPort": "COM4",
       "ledTarget": "tens"
     }
   },
@@ -39,22 +39,22 @@
     "keepAspectRatio": true
   },
   "led": {
-    "enabled": false,
+    "enabled": true,
     "mode": "serial",
-    "port": "shared",
+    "port": "COM5",
     "baudRate": 9600,
     "lineEnding": "\n",
     "openDelayMs": 1500,
     "chip": "unknown",
     "voltage": 12,
     "powerPerMeterW": 18,
-    "runCommand": "LED_RUN",
-    "offCommand": "LED_OFF",
-    "idleCommand": "LED_IDLE",
-    "errorCommand": "LED_ERROR",
+    "runCommand": "2",
+    "outOfRangeCommand": "1",
+    "offCommand": "0",
+    "idleCommand": "0",
+    "errorCommand": "0",
     "runDelayMs": 1200,
-    "sendOffOnVideoStart": true,
-    "runOnlyForValidYears": true
+    "sendOffOnVideoStart": true
   },
   "debug": {
     "enabled": true,

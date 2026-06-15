@@ -129,7 +129,7 @@ python tools/serial_check.py --mode dual_digit --tens-port COM3 --ones-port COM4
 - ввести `00-99`
 - запустить конкретный ролик `2016-2026`
 - запустить `idle`, `before_2016`, `after_2026`
-- отправить `LED_RUN`, `LED_OFF`, `LED_IDLE`, `LED_ERROR`
+- отправить LED-команды `RUN`, `OFF`, `IDLE`, `ERROR`
 
 Ручной режим работает даже без Arduino.
 
@@ -152,15 +152,17 @@ LED-управление абстрактное и настраивается в
 
 ```json
 "led": {
-  "enabled": false,
-  "runCommand": "LED_RUN",
-  "offCommand": "LED_OFF",
-  "idleCommand": "LED_IDLE",
-  "errorCommand": "LED_ERROR"
+  "enabled": true,
+  "port": "COM5",
+  "runCommand": "2",
+  "outOfRangeCommand": "1",
+  "offCommand": "0",
+  "idleCommand": "0",
+  "errorCommand": "0"
 }
 ```
 
-Если `led.enabled=false`, приложение не отправляет команды и работает без ленты. Если включить LED в режиме двух Arduino, команда отправляется в порт из `serial.dual.ledTarget`: `tens`, `ones` или `both`.
+Если `led.enabled=false`, приложение не отправляет команды и работает без ленты. Для текущего стенда: `0` выключает подсветку, `2` запускает анимацию от барабана к экрану для годов `2016-2026`, `1` включает постоянное свечение для годов вне диапазона.
 
 ## Настройка экрана
 

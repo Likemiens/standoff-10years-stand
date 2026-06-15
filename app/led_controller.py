@@ -35,6 +35,9 @@ class LedController:
     def send_error(self) -> bool:
         return self.send("error")
 
+    def send_out_of_range(self) -> bool:
+        return self.send("outOfRange")
+
     def send(self, command_name: str) -> bool:
         key = f"{command_name}Command"
         command = str(self.config.get(key, "")).strip()

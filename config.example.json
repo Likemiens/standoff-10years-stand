@@ -49,12 +49,12 @@
     "voltage": 12,
     "powerPerMeterW": 18,
     "runCommand": "LED_RUN",
+    "outOfRangeCommand": "LED_ERROR",
     "offCommand": "LED_OFF",
     "idleCommand": "LED_IDLE",
     "errorCommand": "LED_ERROR",
     "runDelayMs": 1200,
-    "sendOffOnVideoStart": true,
-    "runOnlyForValidYears": true
+    "sendOffOnVideoStart": true
   },
   "debug": {
     "enabled": true,

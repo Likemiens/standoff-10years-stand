@@ -255,10 +255,7 @@ class StandoffStateMachine(QObject):
             resolved.file_name,
         )
 
-        led_run_sent = False
-        should_run_led = self._should_run_led(resolved)
-        if should_run_led:
-            led_run_sent = self.led.send_run()
+        led_run_sent = self._send_pre_content_led(resolved)
 
         if led_run_sent:
             self._pending_content = resolved
@@ -298,12 +295,14 @@ class StandoffStateMachine(QObject):
             self.last_error = self.led.last_error
         self._emit_debug()
 
-    def _should_run_led(self, resolved: ResolvedContent) -> bool:
+    def _send_pre_content_led(self, resolved: ResolvedContent) -> bool:
         if not self.led.enabled:
             return False
         if resolved.scenario == SCENARIO_VIDEO:
-            return True
-        return not bool(self.config["led"].get("runOnlyForValidYears", True))
+            return self.led.send_run()
+        if resolved.scenario in {SCENARIO_BEFORE, SCENARIO_AFTER}:
+            return self.led.send_out_of_range()
+        return False
 
     def _emit_debug(self) -> None:
         self.debugChanged.emit(
