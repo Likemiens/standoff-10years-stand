@@ -11,6 +11,19 @@ LINE_ENDINGS = {
     "none": "",
 }
 
+PROBE_BAUDS = (9600, 115200)
+PROBE_LINE_ENDINGS = ("lf", "crlf")
+PROBE_COMMANDS = (
+    "LED_IDLE",
+    "LED_RUN",
+    "LED_OFF",
+    "RUN",
+    "OFF",
+    "ON",
+    "0",
+    "1",
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Send LED test commands to a serial port")
@@ -26,6 +39,7 @@ def parse_args() -> argparse.Namespace:
         help="Command to send. Can be passed multiple times.",
     )
     parser.add_argument("--read-after-ms", type=int, default=300, help="Read possible Arduino response after each command")
+    parser.add_argument("--probe", action="store_true", help="Try common baud rates, line endings, and commands")
     return parser.parse_args()
 
 
@@ -52,10 +66,40 @@ def read_available(serial_port: object, duration_ms: int) -> None:
             print(f"  received: {text!r}")
 
 
+def send_commands(
+    serial_module: object,
+    port: str,
+    baud: int,
+    line_ending: str,
+    commands: list[str] | tuple[str, ...],
+    open_delay_ms: int,
+    interval_ms: int,
+    read_after_ms: int,
+) -> int:
+    ending = LINE_ENDINGS[line_ending]
+    try:
+        with serial_module.Serial(port, baud, timeout=0.2, write_timeout=1) as serial_port:
+            if open_delay_ms > 0:
+                print(f"Waiting {open_delay_ms}ms after open")
+                time.sleep(open_delay_ms / 1000)
+
+            for command in commands:
+                payload = f"{command}{ending}".encode("utf-8")
+                print(f"sending: {command!r} ending={line_ending}")
+                serial_port.write(payload)
+                serial_port.flush()
+                read_available(serial_port, read_after_ms)
+                time.sleep(interval_ms / 1000)
+    except Exception as exc:
+        print(f"ERROR: {type(exc).__name__}: {exc}")
+        return 1
+
+    return 0
+
+
 def main() -> int:
     args = parse_args()
     commands = args.commands or ["LED_IDLE", "LED_RUN", "LED_OFF", "LED_ERROR"]
-    ending = LINE_ENDINGS[args.line_ending]
 
     try:
         import serial
@@ -65,24 +109,41 @@ def main() -> int:
 
     list_ports()
     print("")
+
+    if args.probe:
+        print(f"Probe mode for {args.port}")
+        for baud in PROBE_BAUDS:
+            for line_ending in PROBE_LINE_ENDINGS:
+                print("")
+                print(f"Opening {args.port} at {baud} baud, ending={line_ending}")
+                result = send_commands(
+                    serial,
+                    args.port,
+                    baud,
+                    line_ending,
+                    PROBE_COMMANDS,
+                    args.open_delay_ms,
+                    500,
+                    args.read_after_ms,
+                )
+                if result != 0:
+                    return result
+        print("Probe done")
+        return 0
+
     print(f"Opening {args.port} at {args.baud} baud")
-
-    try:
-        with serial.Serial(args.port, args.baud, timeout=0.2, write_timeout=1) as serial_port:
-            if args.open_delay_ms > 0:
-                print(f"Waiting {args.open_delay_ms}ms after open")
-                time.sleep(args.open_delay_ms / 1000)
-
-            for command in commands:
-                payload = f"{command}{ending}".encode("utf-8")
-                print(f"sending: {command!r}")
-                serial_port.write(payload)
-                serial_port.flush()
-                read_available(serial_port, args.read_after_ms)
-                time.sleep(args.interval_ms / 1000)
-    except Exception as exc:
-        print(f"ERROR: {type(exc).__name__}: {exc}")
-        return 1
+    result = send_commands(
+        serial,
+        args.port,
+        args.baud,
+        args.line_ending,
+        commands,
+        args.open_delay_ms,
+        args.interval_ms,
+        args.read_after_ms,
+    )
+    if result != 0:
+        return result
 
     print("Done")
     return 0
