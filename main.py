@@ -13,6 +13,7 @@ from app.dual_serial_client import DualDigitSerialClient
 from app.led_controller import LedController
 from app.logger import setup_logger
 from app.manual_control import ManualControl
+from app.serial_command_sender import SerialCommandSender
 from app.serial_client import SerialClient
 from app.state_machine import StandoffStateMachine
 from app.ui_debug import DebugPanel
@@ -76,7 +77,19 @@ def main() -> int:
     elif args.simulate:
         logger.info("simulate_mode_enabled")
 
-    led = LedController(config["led"], logger, serial_client)
+    led_serial_sender: SerialCommandSender | None = None
+    led_sender = serial_client
+    led_port = str(config["led"].get("port", "shared")).strip()
+    if (
+        config["led"].get("enabled", False)
+        and str(config["led"].get("mode", "serial")).lower() == "serial"
+        and led_port.lower() not in {"", "shared"}
+        and not args.simulate
+    ):
+        led_serial_sender = SerialCommandSender(config["led"], logger, name="led")
+        led_sender = led_serial_sender
+
+    led = LedController(config["led"], logger, led_sender)
     state = StandoffStateMachine(config, resolver, led, logger, content_check)
 
     window = MainWindow(config, simulate=args.simulate)
@@ -117,10 +130,15 @@ def main() -> int:
         serial_client.statusChanged.connect(state.set_serial_status)
         serial_client.errorOccurred.connect(state.handle_serial_error)
         qt_app.aboutToQuit.connect(serial_client.stop)
+    if led_serial_sender is not None:
+        qt_app.aboutToQuit.connect(led_serial_sender.stop)
 
     window.show_configured()
     if bool(config["debug"].get("showOnStart", False)):
         debug_panel.show()
+
+    if led_serial_sender is not None:
+        led_serial_sender.start()
 
     state.start()
     if serial_client is not None:

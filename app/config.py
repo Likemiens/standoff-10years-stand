@@ -58,6 +58,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "led": {
         "enabled": False,
         "mode": "serial",
+        "port": "shared",
+        "baudRate": 9600,
+        "lineEnding": "\n",
+        "openDelayMs": 1500,
         "chip": "unknown",
         "voltage": 12,
         "powerPerMeterW": 18,
