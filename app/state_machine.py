@@ -168,6 +168,8 @@ class StandoffStateMachine(QObject):
     def handle_playback_error(self, message: str) -> None:
         self.last_error = message
         self.logger.error("playback_error | %s", message)
+        if self.current_scenario == SCENARIO_VIDEO:
+            self._turn_led_off()
         self._emit_debug()
         if self.current_scenario != SCENARIO_IDLE:
             self._return_idle_timer.start(500)
