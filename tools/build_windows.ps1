@@ -55,6 +55,14 @@ if (Test-Path (Join-Path $Root "OPERATOR_GUIDE.md")) {
   Copy-Item -Force (Join-Path $Root "OPERATOR_GUIDE.md") (Join-Path $Dist "OPERATOR_GUIDE.md")
 }
 
+if (Test-Path (Join-Path $Root "OPERATOR_GUIDE.html")) {
+  Copy-Item -Force (Join-Path $Root "OPERATOR_GUIDE.html") (Join-Path $Dist "OPERATOR_GUIDE.html")
+}
+
+if (Test-Path (Join-Path $Root "OPERATOR_GUIDE.pdf")) {
+  Copy-Item -Force (Join-Path $Root "OPERATOR_GUIDE.pdf") (Join-Path $Dist "OPERATOR_GUIDE.pdf")
+}
+
 if (Test-Path (Join-Path $Root "content")) {
   $ContentItems = Get-ChildItem -Force (Join-Path $Root "content")
   foreach ($Item in $ContentItems) {
